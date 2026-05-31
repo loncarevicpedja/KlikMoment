@@ -193,12 +193,14 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
             />
           </div>
 
-          {[
-            ["uploadEnabled", "Uploads enabled", false],
-            ["viewEnabled", "View enabled", false],
-            ["allowGuestsToViewPhotos", "Guests can view gallery", false],
-            ["allowGuestsToDownloadPhotos", "Guests can download", true],
-          ].map(([key, label, requiresGallery]) => (
+          {(
+            [
+              ["uploadEnabled", "Uploads enabled", false],
+              ["viewEnabled", "View enabled", false],
+              ["allowGuestsToViewPhotos", "Guests can view gallery", false],
+              ["allowGuestsToDownloadPhotos", "Guests can download", true],
+            ] as const
+          ).map(([key, label, requiresGallery]) => (
             <div
               key={key}
               className={cn(
