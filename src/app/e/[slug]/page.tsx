@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, use, useCallback } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { Camera } from "lucide-react";
 import { GuestUpload } from "@/components/upload/guest-upload";
@@ -56,24 +55,24 @@ export default function PublicEventPage({
         <span className="font-semibold text-violet-700">KlikMoment</span>
       </header>
 
+      {event.coverImageUrl && (
+        <div className="mb-8 px-4">
+          <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-slate-100/60 shadow-xl">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={event.coverImageUrl}
+              alt="Event cover"
+              className="mx-auto block h-auto w-full max-h-[min(85vh,900px)] object-contain"
+            />
+          </div>
+        </div>
+      )}
+
       <motion.div
         initial={false}
         animate={{ opacity: 1 }}
         className="mx-auto max-w-3xl px-4 pb-16"
       >
-        {event.coverImageUrl && (
-          <div className="relative mb-8 aspect-[16/9] overflow-hidden rounded-3xl shadow-xl">
-            <Image
-              src={event.coverImageUrl}
-              alt="Event cover"
-              fill
-              className="object-cover"
-              priority
-              sizes="(max-width: 768px) 100vw, 768px"
-            />
-          </div>
-        )}
-
         <RichTextDisplay
           html={event.eventName}
           className="text-center text-3xl font-bold sm:text-4xl"

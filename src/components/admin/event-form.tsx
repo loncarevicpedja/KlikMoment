@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { mediaUrlFromPublicUrl } from "@/lib/media-url";
+import { CoverUpload } from "@/components/events/cover-upload";
 import { copyToClipboard, cn } from "@/lib/utils";
 
 type EventFormData = {
@@ -144,24 +144,24 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
               className="mt-1.5"
             />
           </div>
-          <div>
-            <Label htmlFor="cover">Cover image</Label>
-            {coverImageUrl && !cover && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={mediaUrlFromPublicUrl(coverImageUrl)}
-                alt="Cover"
-                className="mt-2 max-h-48 rounded-xl object-cover"
-              />
-            )}
-            <Input
-              id="cover"
-              type="file"
-              accept="image/*"
-              className="mt-1.5"
-              onChange={(e) => setCover(e.target.files?.[0] ?? null)}
+          {eventId ? (
+            <CoverUpload
+              eventId={eventId}
+              coverImageUrl={coverImageUrl}
+              uploadOnSave
             />
-          </div>
+          ) : (
+            <div>
+              <Label htmlFor="cover">Cover image</Label>
+              <Input
+                id="cover"
+                type="file"
+                accept="image/*"
+                className="mt-1.5"
+                onChange={(e) => setCover(e.target.files?.[0] ?? null)}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

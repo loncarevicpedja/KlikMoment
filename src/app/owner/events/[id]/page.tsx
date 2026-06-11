@@ -3,6 +3,7 @@
 import { useEffect, useState, use, useCallback } from "react";
 import { motion } from "framer-motion";
 import { HardDrive, Image, Clock } from "lucide-react";
+import { CoverUpload } from "@/components/events/cover-upload";
 import { PhotoGallery } from "@/components/gallery/photo-gallery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -15,6 +16,7 @@ export default function OwnerEventPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
   const [stats, setStats] = useState<{
     usedBytes: number;
     limitBytes: number;
@@ -31,9 +33,18 @@ export default function OwnerEventPage({
       .then(setStats);
   }, [id]);
 
+  const loadEvent = useCallback(() => {
+    fetch(`/api/events/${id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((event) => {
+        if (event?.coverImageUrl) setCoverImageUrl(event.coverImageUrl);
+      });
+  }, [id]);
+
   useEffect(() => {
     loadStats();
-  }, [loadStats]);
+    loadEvent();
+  }, [loadStats, loadEvent]);
 
   if (!stats) {
     return <Skeleton className="h-96 w-full" />;
@@ -75,6 +86,19 @@ export default function OwnerEventPage({
           </motion.div>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Cover image</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CoverUpload
+            eventId={id}
+            coverImageUrl={coverImageUrl}
+            onUpdated={setCoverImageUrl}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
