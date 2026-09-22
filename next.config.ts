@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
       {
         pathname: "/api/media",
       },
+      {
+        pathname: "/brand/**",
+      },
     ],
     remotePatterns: [
       {
