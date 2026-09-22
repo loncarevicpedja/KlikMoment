@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { sr } from "@/content/sr";
 import { mediaUrlFromPublicUrl } from "@/lib/media-url";
 
 type CoverUploadProps = {
@@ -44,7 +45,7 @@ export function CoverUpload({
 
   const handleUpload = async () => {
     if (!file) {
-      toast.error("Choose an image first");
+      toast.error(sr.owner.chooseImage);
       return;
     }
 
@@ -60,14 +61,14 @@ export function CoverUpload({
     setUploading(false);
 
     if (!res.ok) {
-      toast.error("Failed to upload cover");
+      toast.error(sr.owner.coverUploadFailed);
       return;
     }
 
     const updated = await res.json();
     setCurrentCover(updated.coverImageUrl);
     handleFileChange(null);
-    toast.success("Cover image updated");
+    toast.success(sr.toast.coverUpdated);
     onUpdated?.(updated.coverImageUrl);
   };
 
@@ -81,13 +82,13 @@ export function CoverUpload({
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={displayUrl}
-          alt="Event cover"
+          alt={sr.owner.coverImage}
           className="max-h-80 w-full rounded-xl bg-slate-100 object-contain"
         />
       )}
 
       <div>
-        <Label htmlFor={`cover-${eventId}`}>Cover image</Label>
+        <Label htmlFor={`cover-${eventId}`}>{sr.owner.coverImage}</Label>
         <Input
           id={`cover-${eventId}`}
           type="file"
@@ -105,10 +106,10 @@ export function CoverUpload({
           onClick={handleUpload}
         >
           {uploading
-            ? "Uploading..."
+            ? sr.owner.uploading
             : currentCover
-              ? "Replace cover"
-              : "Upload cover"}
+              ? sr.owner.replaceCover
+              : sr.owner.uploadCover}
         </Button>
       )}
     </div>

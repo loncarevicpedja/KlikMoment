@@ -11,6 +11,7 @@ import { PhotoGallery } from "@/components/gallery/photo-gallery";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { sr } from "@/content/sr";
 import { copyToClipboard } from "@/lib/utils";
 
 export default function AdminEventDetailPage({
@@ -34,6 +35,7 @@ export default function AdminEventDetailPage({
     viewEnabled: boolean;
     allowGuestsToViewPhotos: boolean;
     allowGuestsToDownloadPhotos: boolean;
+    status: string;
   } | null>(null);
 
   const load = () => {
@@ -54,26 +56,22 @@ export default function AdminEventDetailPage({
       body: JSON.stringify(body),
     });
     if (res.ok) {
-      toast.success("Updated");
+      toast.success(action === "activate" ? sr.admin.activated : sr.toast.saved);
       load();
-    } else toast.error("Action failed");
+    } else toast.error(sr.common.error);
   };
 
   const deleteEvent = async () => {
-    if (
-      !confirm(
-        "Delete this event permanently?\n\nThis removes all photos, storage, and the owner account if they have no other events."
-      )
-    ) {
+    if (!confirm(sr.admin.deleteConfirm)) {
       return;
     }
 
     const res = await fetch(`/api/events/${id}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success("Event deleted");
+      toast.success(sr.admin.eventDeleted);
       router.push("/admin/events");
     } else {
-      toast.error("Failed to delete event");
+      toast.error(sr.admin.deleteFailed);
     }
   };
 
@@ -88,18 +86,18 @@ export default function AdminEventDetailPage({
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Edit event</h1>
+          <h1 className="text-3xl font-bold text-slate-900">{sr.admin.editEvent}</h1>
           <p className="mt-1 font-mono text-sm text-violet-600">{publicUrl}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" onClick={() => setShowQr(true)}>
             <QrCode className="h-4 w-4" />
-            QR Code
+            {sr.admin.qrCode}
           </Button>
           <Button variant="secondary" asChild>
             <Link href={`/e/${event.slug}`} target="_blank">
               <ExternalLink className="h-4 w-4" />
-              Public page
+              {sr.admin.publicPage}
             </Link>
           </Button>
           <Button
@@ -107,26 +105,31 @@ export default function AdminEventDetailPage({
             onClick={() => (window.location.href = `/api/photos/download-all?eventId=${id}`)}
           >
             <Download className="h-4 w-4" />
-            All ZIP
+            {sr.admin.allZip}
           </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Quick actions</CardTitle>
+          <CardTitle>{sr.admin.quickActions}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Event
+              {sr.admin.eventSection}
             </p>
             <div className="flex flex-wrap gap-2">
+              {event.status === "PENDING" && (
+                <Button onClick={() => runAction("activate")}>
+                  {sr.admin.activateAfterPayment}
+                </Button>
+              )}
               <Button variant="outline" onClick={() => runAction("extend", 7)}>
-                Extend 7 days
+                {sr.admin.extend7Days}
               </Button>
               <Button variant="outline" onClick={() => runAction("expire")}>
-                Expire now
+                {sr.admin.expireNow}
               </Button>
             </div>
           </div>
@@ -134,7 +137,7 @@ export default function AdminEventDetailPage({
           {event.ownerId && (
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Owner
+                {sr.admin.ownerSection}
               </p>
               <Button
                 variant="outline"
@@ -146,36 +149,36 @@ export default function AdminEventDetailPage({
                   const data = await res.json();
                   if (res.ok) {
                     if (data.emailSent) {
-                      toast.success("Activation email sent");
+                      toast.success(sr.admin.activationEmailSent);
                     } else if (data.activationUrl) {
                       const copied = await copyToClipboard(data.activationUrl);
                       toast.success(
                         copied
-                          ? "Email not configured — activation link copied"
-                          : "Email not configured — copy link from toast",
+                          ? sr.admin.emailNotConfiguredCopied
+                          : sr.admin.emailNotConfiguredCopy,
                         {
                           description: data.activationUrl,
                           duration: 30_000,
                         }
                       );
                     } else {
-                      toast.success("Password reset");
+                      toast.success(sr.admin.passwordReset);
                     }
-                  } else toast.error("Failed");
+                  } else toast.error(sr.admin.failed);
                 }}
               >
-                Reset owner password
+                {sr.admin.resetOwnerPassword}
               </Button>
             </div>
           )}
 
           <div className="border-t border-slate-200 pt-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-red-600">
-              Danger zone
+              {sr.admin.dangerZone}
             </p>
             <Button variant="destructive" onClick={deleteEvent}>
               <Trash2 className="h-4 w-4" />
-              Delete event
+              {sr.admin.deleteEvent}
             </Button>
           </div>
         </CardContent>
@@ -198,7 +201,7 @@ export default function AdminEventDetailPage({
       />
 
       <div>
-        <h2 className="mb-4 text-xl font-semibold">Gallery</h2>
+        <h2 className="mb-4 text-xl font-semibold">{sr.admin.gallery}</h2>
         <PhotoGallery
           eventId={id}
           canDownload

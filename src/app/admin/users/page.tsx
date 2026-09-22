@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { sr } from "@/content/sr";
 import { formatDate, copyToClipboard } from "@/lib/utils";
 
 type UserRow = {
@@ -34,28 +35,26 @@ export default function AdminUsersPage() {
     const data = await res.json();
     if (res.ok) {
       if (data.emailSent) {
-        toast.success("Activation email sent");
+        toast.success(sr.admin.activationEmailSent);
       } else if (data.activationUrl) {
         const copied = await copyToClipboard(data.activationUrl);
         toast.success(
-          copied
-            ? "Email not configured — activation link copied"
-            : "Email not configured — copy link from toast",
+          copied ? sr.admin.emailNotConfiguredCopied : sr.admin.emailNotConfiguredCopy,
           {
             description: data.activationUrl,
             duration: 30_000,
           }
         );
       } else {
-        toast.success("Password reset");
+        toast.success(sr.admin.passwordReset);
       }
-    } else toast.error("Failed");
+    } else toast.error(sr.admin.failed);
   };
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-slate-900">Users</h1>
-      <p className="mt-1 text-slate-600">Manage event owners and admins</p>
+      <h1 className="text-3xl font-bold text-slate-900">{sr.admin.usersTitle}</h1>
+      <p className="mt-1 text-slate-600">{sr.admin.usersSubtitle}</p>
 
       <div className="mt-8 space-y-3">
         {loading &&
@@ -69,8 +68,9 @@ export default function AdminUsersPage() {
               <div>
                 <p className="font-medium">{user.email}</p>
                 <p className="text-sm text-slate-500">
-                  {user.role} · {user.eventCount} events · joined{" "}
-                  {formatDate(user.createdAt)}
+                  {user.role === "ADMIN" ? sr.admin.roleAdmin : sr.admin.roleOwner} ·{" "}
+                  {user.eventCount} {sr.nav.events.toLowerCase()} ·{" "}
+                  {sr.admin.joined} {formatDate(user.createdAt)}
                 </p>
               </div>
               <div className="flex items-center gap-3">
@@ -81,7 +81,7 @@ export default function AdminUsersPage() {
                       : "bg-amber-100 text-amber-700"
                   }`}
                 >
-                  {user.activated ? "Active" : "Pending"}
+                  {user.activated ? sr.admin.active : sr.admin.pending}
                 </span>
                 {user.role === "OWNER" && (
                   <Button
@@ -89,7 +89,7 @@ export default function AdminUsersPage() {
                     size="sm"
                     onClick={() => resetPassword(user.id)}
                   >
-                    Reset password
+                    {sr.admin.resetPassword}
                   </Button>
                 )}
               </div>

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RichTextDisplay } from "@/components/editor/rich-text-editor";
+import { sr } from "@/content/sr";
 import { formatDate } from "@/lib/utils";
 
 type EventRow = {
@@ -16,6 +17,7 @@ type EventRow = {
   eventName: string;
   ownerEmail: string;
   isExpired: boolean;
+  status: string;
   endDate: string;
   _count: { photos: number };
 };
@@ -37,13 +39,13 @@ export default function AdminEventsPage() {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Events</h1>
-          <p className="text-slate-600">Create and manage all events</p>
+          <h1 className="text-3xl font-bold text-slate-900">{sr.nav.events}</h1>
+          <p className="text-slate-600">Upravljanje svim događajima</p>
         </div>
         <Button asChild>
           <Link href="/admin/events/new">
             <Plus className="h-4 w-4" />
-            New event
+            {sr.admin.createEvent}
           </Link>
         </Button>
       </div>
@@ -68,18 +70,24 @@ export default function AdminEventsPage() {
                     <RichTextDisplay html={event.eventName} className="text-lg" />
                     <p className="mt-1 text-sm text-slate-500">{event.ownerEmail}</p>
                     <p className="text-xs text-slate-400">
-                      /e/{event.slug} · {event._count.photos} photos · ends{" "}
-                      {formatDate(event.endDate)}
+                      /e/{event.slug} · {event._count.photos} {sr.admin.photosLabel} ·{" "}
+                      {sr.admin.ends} {formatDate(event.endDate)}
                     </p>
                   </div>
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      event.isExpired
-                        ? "bg-red-100 text-red-700"
-                        : "bg-emerald-100 text-emerald-700"
+                      event.status === "PENDING"
+                        ? "bg-amber-100 text-amber-800"
+                        : event.isExpired
+                          ? "bg-red-100 text-red-700"
+                          : "bg-emerald-100 text-emerald-700"
                     }`}
                   >
-                    {event.isExpired ? "Expired" : "Active"}
+                    {event.status === "PENDING"
+                      ? sr.admin.pending
+                      : event.isExpired
+                        ? sr.admin.expired
+                        : sr.admin.active}
                   </span>
                 </CardContent>
               </Card>

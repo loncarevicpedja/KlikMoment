@@ -13,6 +13,14 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  if (event.status === "PENDING") {
+    return NextResponse.json({
+      pending: true,
+      eventName: event.eventName,
+      message: "Galerija se uskoro otvara",
+    });
+  }
+
   const photoCount = await photoRepository.countByEvent(event.id, {
     hideLikedFromGuests: true,
   });

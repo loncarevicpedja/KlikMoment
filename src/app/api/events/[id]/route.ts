@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { eventRepository } from "@/lib/repositories/event-repository";
 import { photoRepository } from "@/lib/repositories/photo-repository";
 import {
+  activateEventAfterPayment,
   deleteEvent,
   expireEvent,
   extendEventDuration,
@@ -48,6 +49,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (body.action === "expire") {
       const event = await expireEvent(id);
       return NextResponse.json(event);
+    }
+
+    if (body.action === "activate") {
+      const baseUrl = process.env.AUTH_URL ?? req.nextUrl.origin;
+      const result = await activateEventAfterPayment(id, baseUrl);
+      return NextResponse.json(result);
     }
 
     const parsed = eventUpdateSchema.safeParse({ ...body, id });

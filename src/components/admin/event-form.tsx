@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CoverUpload } from "@/components/events/cover-upload";
+import { sr } from "@/content/sr";
 import { copyToClipboard, cn } from "@/lib/utils";
 
 type EventFormData = {
@@ -73,7 +74,7 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
 
     if (!res.ok) {
       setLoading(false);
-      toast.error("Failed to save event");
+      toast.error(sr.admin.saveFailed);
       return;
     }
 
@@ -91,17 +92,17 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
       const copied = await copyToClipboard(event.activationUrl);
       toast.warning(
         copied
-          ? "Event created — email could not be sent, activation link copied"
-          : "Event created — email could not be sent",
+          ? sr.admin.eventCreatedEmailFailed
+          : sr.admin.eventCreatedEmailFailedNoCopy,
         {
           description: event.activationUrl,
           duration: 30_000,
         }
       );
     } else if (!eventId && event.emailSent) {
-      toast.success("Event created — activation email sent");
+      toast.success(sr.admin.eventCreatedEmailSent);
     } else {
-      toast.success(eventId ? "Event updated" : "Event created");
+      toast.success(eventId ? sr.toast.eventUpdated : sr.toast.eventCreated);
     }
 
     router.push(`/admin/events/${event.id}`);
@@ -111,29 +112,29 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Event details</CardTitle>
+          <CardTitle>{sr.admin.eventDetails}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Event name</Label>
+            <Label>{sr.admin.eventName}</Label>
             <RichTextEditor
               value={form.eventName}
               onChange={(v) => update("eventName", v)}
-              placeholder="Wedding of Ana & Marko"
+              placeholder="Venčanje Ane i Marka"
               className="mt-1.5"
             />
           </div>
           <div>
-            <Label>Description</Label>
+            <Label>{sr.admin.description}</Label>
             <RichTextEditor
               value={form.eventDescription}
               onChange={(v) => update("eventDescription", v)}
-              placeholder="Share your photos with us!"
+              placeholder="Podelite svoje fotografije sa nama!"
               className="mt-1.5"
             />
           </div>
           <div>
-            <Label htmlFor="ownerEmail">Owner email</Label>
+            <Label htmlFor="ownerEmail">{sr.admin.ownerEmail}</Label>
             <Input
               id="ownerEmail"
               type="email"
@@ -152,7 +153,7 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
             />
           ) : (
             <div>
-              <Label htmlFor="cover">Cover image</Label>
+              <Label htmlFor="cover">{sr.owner.coverImage}</Label>
               <Input
                 id="cover"
                 type="file"
@@ -167,11 +168,11 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>Settings</CardTitle>
+          <CardTitle>{sr.admin.settings}</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div>
-            <Label htmlFor="storage">Storage limit (GB)</Label>
+            <Label htmlFor="storage">{sr.admin.storageLimit}</Label>
             <Input
               id="storage"
               type="number"
@@ -182,7 +183,7 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
             />
           </div>
           <div>
-            <Label htmlFor="days">Active days</Label>
+            <Label htmlFor="days">{sr.admin.activeDays}</Label>
             <Input
               id="days"
               type="number"
@@ -195,10 +196,10 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
 
           {(
             [
-              ["uploadEnabled", "Uploads enabled", false],
-              ["viewEnabled", "View enabled", false],
-              ["allowGuestsToViewPhotos", "Guests can view gallery", false],
-              ["allowGuestsToDownloadPhotos", "Guests can download", true],
+              ["uploadEnabled", sr.admin.uploadsEnabled, false],
+              ["viewEnabled", sr.admin.viewEnabled, false],
+              ["allowGuestsToViewPhotos", sr.admin.guestsCanView, false],
+              ["allowGuestsToDownloadPhotos", sr.admin.guestsCanDownload, true],
             ] as const
           ).map(([key, label, requiresGallery]) => (
             <div
@@ -224,7 +225,11 @@ export function EventForm({ initial, eventId, coverImageUrl }: EventFormProps) {
       </Card>
 
       <Button type="submit" size="lg" disabled={loading}>
-        {loading ? "Saving..." : eventId ? "Update event" : "Create event"}
+        {loading
+          ? sr.admin.saving
+          : eventId
+            ? sr.admin.updateEvent
+            : sr.admin.createEvent}
       </Button>
     </form>
   );

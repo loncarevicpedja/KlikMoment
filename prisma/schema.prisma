@@ -12,6 +12,19 @@ enum Role {
   OWNER
 }
 
+enum EventStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+}
+
+enum EventCategory {
+  WEDDING
+  BIRTHDAY
+  CORPORATE
+  CHRISTENING
+}
+
 model User {
   id               String    @id @default(uuid())
   email            String    @unique
@@ -64,29 +77,44 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model SiteSettings {
+  id                   String   @id @default("default")
+  paymentBankName      String?
+  paymentAccountHolder String?
+  paymentAccountNumber String?
+  paymentInstructions  String?  @db.Text
+  paymentReferenceTpl  String   @default("KlikMoment-{eventId}")
+  updatedAt            DateTime @updatedAt
+}
+
 model Event {
-  id                        String   @id @default(uuid())
-  slug                      String   @unique
-  eventName                 String   @db.Text
-  eventDescription          String   @db.Text @default("")
-  coverImageUrl             String?
-  storageLimitGB            Float    @default(5)
-  activeDays                Int      @default(30)
-  startDate                 DateTime @default(now())
-  endDate                   DateTime
-  uploadEnabled             Boolean  @default(true)
-  viewEnabled               Boolean  @default(true)
-  allowGuestsToViewPhotos   Boolean  @default(false)
-  allowGuestsToDownloadPhotos Boolean @default(false)
-  folderName                String   @unique
-  ownerEmail                String
-  isExpired                 Boolean  @default(false)
-  expirationWarningSent     Boolean  @default(false)
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
-  ownerId                   String?
-  owner                     User?    @relation("EventOwner", fields: [ownerId], references: [id])
-  photos                    Photo[]
+  id                          String         @id @default(uuid())
+  slug                        String         @unique
+  eventName                   String         @db.Text
+  eventDescription            String         @db.Text @default("")
+  coverImageUrl               String?
+  storageLimitGB              Float          @default(5)
+  activeDays                  Int            @default(30)
+  startDate                   DateTime       @default(now())
+  endDate                     DateTime
+  uploadEnabled               Boolean        @default(true)
+  viewEnabled                 Boolean        @default(true)
+  allowGuestsToViewPhotos     Boolean        @default(false)
+  allowGuestsToDownloadPhotos Boolean        @default(false)
+  folderName                  String         @unique
+  ownerEmail                  String
+  ownerPhone                  String?
+  status                      EventStatus    @default(ACTIVE)
+  category                    EventCategory?
+  location                    String?
+  packageId                   String         @default("basic")
+  isExpired                   Boolean        @default(false)
+  expirationWarningSent       Boolean        @default(false)
+  createdAt                   DateTime       @default(now())
+  updatedAt                   DateTime       @updatedAt
+  ownerId                     String?
+  owner                       User?          @relation("EventOwner", fields: [ownerId], references: [id])
+  photos                      Photo[]
 }
 
 model Photo {

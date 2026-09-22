@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { downloadBlobFile } from "@/lib/download-photo";
+import { sr } from "@/content/sr";
 
 type QrViewerProps = {
   eventId: string;
@@ -53,17 +54,17 @@ export function QrViewer({ eventId, slug, onClose }: QrViewerProps) {
       className="fixed inset-0 z-50 flex flex-col bg-black/95"
       role="dialog"
       aria-modal="true"
-      aria-label="QR code"
+      aria-label={sr.admin.qrCode}
     >
       <div className="flex items-center justify-between px-4 py-3 sm:px-6">
-        <p className="text-sm font-medium text-white">QR Code</p>
+        <p className="text-sm font-medium text-white">{sr.admin.qrCode}</p>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
             className="text-white hover:bg-white/10"
             onClick={() => void handleDownload()}
-            aria-label="Download QR code"
+            aria-label={sr.admin.qrCode}
           >
             <Download className="h-5 w-5" />
           </Button>
@@ -72,7 +73,7 @@ export function QrViewer({ eventId, slug, onClose }: QrViewerProps) {
             size="icon"
             className="text-white hover:bg-white/10"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={sr.common.cancel}
           >
             <X className="h-5 w-5" />
           </Button>
@@ -84,7 +85,7 @@ export function QrViewer({ eventId, slug, onClose }: QrViewerProps) {
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={src}
-            alt="Event QR code"
+            alt={sr.admin.qrCode}
             className="max-h-[70vh] max-w-full rounded-2xl bg-white p-4 shadow-2xl"
           />
         ) : (

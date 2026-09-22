@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cormorant_Garamond, Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { SessionProvider } from "@/components/providers/session-provider";
 import "./globals.css";
@@ -14,10 +14,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const cormorant = Cormorant_Garamond({
+  variable: "--font-serif",
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
-  title: "KlikMoment – Event Photo Sharing",
+  title: "KlikMoment – Deljenje fotografija sa događaja",
   description:
-    "Premium wedding and event photo sharing with QR codes, cloud storage, and beautiful galleries.",
+    "QR galerije za venčanja i proslave. Gosti šalju slike i video — vi sve imate na jednom mestu.",
 };
 
 export const viewport: Viewport = {
@@ -31,8 +37,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="sr">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${cormorant.variable} antialiased`}
+      >
         <SessionProvider>
           {children}
           <Toaster richColors position="top-center" />

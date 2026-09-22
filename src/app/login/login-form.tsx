@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { sr } from "@/content/sr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,7 +32,7 @@ export function LoginForm() {
     setLoading(false);
 
     if (result?.error) {
-      toast.error("Invalid credentials");
+      toast.error(sr.auth.invalidCredentials);
       return;
     }
 
@@ -49,12 +50,12 @@ export function LoginForm() {
     <CardContent>
       {inactive && (
         <p className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">
-          Please activate your account via the email link first.
+          {sr.auth.inactiveHint}
         </p>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{sr.auth.email}</Label>
           <Input
             id="email"
             type="email"
@@ -65,7 +66,7 @@ export function LoginForm() {
           />
         </div>
         <div>
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">{sr.auth.password}</Label>
           <Input
             id="password"
             type="password"
@@ -75,8 +76,8 @@ export function LoginForm() {
             className="mt-1.5"
           />
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Signing in..." : "Sign in"}
+        <Button type="submit" className="w-full bg-[#2C2825]" disabled={loading}>
+          {loading ? sr.auth.signingIn : sr.auth.signIn}
         </Button>
       </form>
     </CardContent>

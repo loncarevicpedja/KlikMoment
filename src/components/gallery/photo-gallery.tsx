@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { downloadBlobFile } from "@/lib/download-photo";
 import { cn } from "@/lib/utils";
+import { sr } from "@/content/sr";
 
 type PhotoGalleryProps = {
   eventId: string;
@@ -82,7 +83,7 @@ export function PhotoGallery({
     });
 
     if (!res.ok) {
-      toast.error("Failed to update like");
+      toast.error(sr.gallery.likeFailed);
       return;
     }
 
@@ -102,7 +103,7 @@ export function PhotoGallery({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this photo?")) return;
+    if (!confirm(sr.gallery.deletePhoto)) return;
     const res = await fetch(`/api/photos/${id}?eventId=${eventId}`, {
       method: "DELETE",
     });
@@ -120,15 +121,15 @@ export function PhotoGallery({
         });
         return next;
       });
-      toast.success("Photo deleted");
+      toast.success(sr.gallery.photoDeleted);
     } else {
-      toast.error("Failed to delete");
+      toast.error(sr.gallery.deleteFailed);
     }
   };
 
   const downloadSelected = async () => {
     const ids = Array.from(selected);
-    if (!ids.length) return toast.error("Select photos first");
+    if (!ids.length) return toast.error(sr.gallery.selectFirst);
 
     const res = await fetch("/api/photos/download", {
       method: "POST",
@@ -136,20 +137,20 @@ export function PhotoGallery({
       body: JSON.stringify({ eventId, photoIds: ids }),
     });
 
-    if (!res.ok) return toast.error("Download failed");
+    if (!res.ok) return toast.error(sr.toast.downloadFailed);
 
     const blob = await res.blob();
     await downloadBlobFile(blob, "selected-photos.zip");
-    toast.success("ZIP downloaded");
+    toast.success(sr.gallery.zipDownloaded);
   };
 
   const downloadAll = async () => {
     const res = await fetch(`/api/photos/download-all?eventId=${eventId}`);
-    if (!res.ok) return toast.error("Download failed");
+    if (!res.ok) return toast.error(sr.toast.downloadFailed);
 
     const blob = await res.blob();
     await downloadBlobFile(blob, "all-photos.zip");
-    toast.success("ZIP downloaded");
+    toast.success(sr.gallery.zipDownloaded);
   };
 
   if (loading) {
@@ -172,12 +173,10 @@ export function PhotoGallery({
         >
           <ImageIcon className="mb-4 h-12 w-12 text-slate-300" />
           <h3 className="text-lg font-semibold text-slate-700">
-            {likedOnly ? "No liked photos yet" : "No photos yet"}
+            {likedOnly ? sr.gallery.noLikedPhotos : sr.gallery.noPhotos}
           </h3>
           <p className="mt-1 text-sm text-slate-500">
-            {likedOnly
-              ? "Tap the heart on photos you love."
-              : "Be the first to share a moment!"}
+            {likedOnly ? sr.gallery.noLikedHint : sr.gallery.noPhotosHint}
           </p>
         </motion.div>
       </div>
@@ -194,18 +193,18 @@ export function PhotoGallery({
             onClick={() => setLikedOnly((v) => !v)}
           >
             <Heart className={cn("h-4 w-4", likedOnly && "fill-current")} />
-            {likedOnly ? "Showing liked" : "Show liked only"}
+            {likedOnly ? sr.gallery.showingLiked : sr.gallery.showLikedOnly}
           </Button>
         )}
         {(canDownload || canDelete) && showSelect && canDownload && (
           <>
             <Button variant="secondary" size="sm" onClick={downloadSelected}>
               <Download className="h-4 w-4" />
-              Selected ZIP
+              {sr.gallery.selectedZip}
             </Button>
             <Button variant="secondary" size="sm" onClick={downloadAll}>
               <Download className="h-4 w-4" />
-              All ZIP
+              {sr.gallery.allZip}
             </Button>
           </>
         )}

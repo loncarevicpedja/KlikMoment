@@ -8,6 +8,7 @@ import { PhotoGallery } from "@/components/gallery/photo-gallery";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { sr } from "@/content/sr";
 import { formatBytes } from "@/lib/utils";
 
 export default function OwnerEventPage({
@@ -52,20 +53,20 @@ export default function OwnerEventPage({
 
   return (
     <div className="space-y-8">
-      <h1 className="text-3xl font-bold text-slate-900">Event Gallery</h1>
+      <h1 className="text-3xl font-bold text-slate-900">{sr.owner.galleryTitle}</h1>
 
       <div className="grid gap-4 sm:grid-cols-3">
         {[
-          { icon: Image, label: "Photos", value: stats.photoCount },
+          { icon: Image, label: sr.owner.photos, value: stats.photoCount },
           {
             icon: HardDrive,
-            label: "Storage",
+            label: sr.owner.storage,
             value: `${formatBytes(stats.usedBytes)} / ${formatBytes(stats.limitBytes)}`,
           },
           {
             icon: Clock,
-            label: "Days left",
-            value: stats.isExpired ? "Expired" : stats.remainingDays,
+            label: sr.owner.daysLeft,
+            value: stats.isExpired ? sr.owner.expired : stats.remainingDays,
           },
         ].map((item, i) => (
           <motion.div
@@ -89,7 +90,7 @@ export default function OwnerEventPage({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Cover image</CardTitle>
+          <CardTitle className="text-base">{sr.owner.coverImage}</CardTitle>
         </CardHeader>
         <CardContent>
           <CoverUpload
@@ -102,12 +103,12 @@ export default function OwnerEventPage({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Storage usage</CardTitle>
+          <CardTitle className="text-base">{sr.owner.storageUsage}</CardTitle>
         </CardHeader>
         <CardContent>
           <Progress value={stats.usedPercent} />
           <p className="mt-2 text-sm text-slate-500">
-            {stats.usedPercent.toFixed(1)}% used
+            {stats.usedPercent.toFixed(1)}% {sr.owner.percentUsed}
           </p>
         </CardContent>
       </Card>

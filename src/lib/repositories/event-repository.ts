@@ -16,9 +16,12 @@ export const eventRepository = {
     });
   },
 
-  findAll(params?: { includeExpired?: boolean }) {
+  findAll(params?: { includeExpired?: boolean; status?: "PENDING" | "ACTIVE" }) {
     return prisma.event.findMany({
-      where: params?.includeExpired ? undefined : { isExpired: false },
+      where: {
+        ...(params?.includeExpired ? {} : { isExpired: false }),
+        ...(params?.status ? { status: params.status } : {}),
+      },
       orderBy: { createdAt: "desc" },
       include: {
         owner: { select: { id: true, email: true, name: true, activated: true } },

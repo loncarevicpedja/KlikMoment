@@ -5,10 +5,12 @@ import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
 import { CloudUpload, X } from "lucide-react";
 import { toast } from "sonner";
+import { sr } from "@/content/sr";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { isVideoMime } from "@/lib/validations/photo";
 
 type UploadItem = {
   id: string;
@@ -27,7 +29,69 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
   const [authorName, setAuthorName] = useState("");
   const [queue, setQueue] = useState<UploadItem[]>([]);
 
-  const uploadFile = async (item: UploadItem) => {
+  const uploadVideo = async (item: UploadItem) => {
+    setQueue((q) =>
+      q.map((x) =>
+        x.id === item.id ? { ...x, status: "uploading", progress: 5 } : x
+      )
+    );
+
+    const initRes = await fetch("/api/photos/upload/init", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slug,
+        mimeType: item.file.type,
+        sizeBytes: item.file.size,
+        authorName: authorName || undefined,
+      }),
+    });
+
+    if (!initRes.ok) {
+      throw new Error((await initRes.json()).error ?? sr.toast.uploadFailed);
+    }
+
+    const { mediaId, storageKey, uploadUrl } = await initRes.json();
+
+    await new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 90) + 5;
+          setQueue((q) =>
+            q.map((x) => (x.id === item.id ? { ...x, progress: pct } : x))
+          );
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error("R2 upload failed"));
+      };
+      xhr.onerror = () => reject(new Error(sr.common.error));
+      xhr.open("PUT", uploadUrl);
+      xhr.setRequestHeader("Content-Type", item.file.type);
+      xhr.send(item.file);
+    });
+
+    const completeRes = await fetch("/api/photos/upload/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slug,
+        mediaId,
+        storageKey,
+        mimeType: item.file.type,
+        sizeBytes: item.file.size,
+        authorName: authorName || undefined,
+      }),
+    });
+
+    if (!completeRes.ok) {
+      throw new Error((await completeRes.json()).error ?? sr.toast.uploadFailed);
+    }
+  };
+
+  const uploadImage = async (item: UploadItem) => {
     setQueue((q) =>
       q.map((x) =>
         x.id === item.id ? { ...x, status: "uploading", progress: 10 } : x
@@ -39,25 +103,33 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
     formData.append("file", item.file);
     if (authorName) formData.append("authorName", authorName);
 
+    const xhr = new XMLHttpRequest();
+    await new Promise<void>((resolve, reject) => {
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          setQueue((q) =>
+            q.map((x) => (x.id === item.id ? { ...x, progress: pct } : x))
+          );
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error(xhr.responseText));
+      };
+      xhr.onerror = () => reject(new Error(sr.common.error));
+      xhr.open("POST", "/api/photos/upload");
+      xhr.send(formData);
+    });
+  };
+
+  const uploadFile = async (item: UploadItem) => {
     try {
-      const xhr = new XMLHttpRequest();
-      await new Promise<void>((resolve, reject) => {
-        xhr.upload.onprogress = (e) => {
-          if (e.lengthComputable) {
-            const pct = Math.round((e.loaded / e.total) * 100);
-            setQueue((q) =>
-              q.map((x) => (x.id === item.id ? { ...x, progress: pct } : x))
-            );
-          }
-        };
-        xhr.onload = () => {
-          if (xhr.status >= 200 && xhr.status < 300) resolve();
-          else reject(new Error(xhr.responseText));
-        };
-        xhr.onerror = () => reject(new Error("Network error"));
-        xhr.open("POST", "/api/photos/upload");
-        xhr.send(formData);
-      });
+      if (isVideoMime(item.file.type)) {
+        await uploadVideo(item);
+      } else {
+        await uploadImage(item);
+      }
 
       setQueue((q) =>
         q.map((x) =>
@@ -69,7 +141,7 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
       setQueue((q) =>
         q.map((x) => (x.id === item.id ? { ...x, status: "error" } : x))
       );
-      toast.error(`Failed to upload ${item.file.name}`);
+      toast.error(`${sr.toast.uploadFailed}: ${item.file.name}`);
     }
   };
 
@@ -94,6 +166,9 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
       "image/jpeg": [".jpg", ".jpeg"],
       "image/png": [".png"],
       "image/webp": [".webp"],
+      "video/mp4": [".mp4"],
+      "video/quicktime": [".mov"],
+      "video/webm": [".webm"],
     },
     disabled,
     multiple: true,
@@ -106,12 +181,12 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="author">Your name (optional)</Label>
+        <Label htmlFor="author">{sr.guest.yourName}</Label>
         <Input
           id="author"
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
-          placeholder="e.g. Ana"
+          placeholder="npr. Ana"
           className="mt-1.5"
           disabled={disabled}
         />
@@ -122,17 +197,17 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
         className={cn(
           "cursor-pointer rounded-3xl border-2 border-dashed p-10 text-center transition",
           isDragActive
-            ? "border-violet-400 bg-violet-50"
-            : "border-slate-200 bg-slate-50/50 hover:border-violet-300 hover:bg-violet-50/30",
+            ? "border-[#C4A574] bg-[#FAF7F2]"
+            : "border-slate-200 bg-slate-50/50 hover:border-[#C4A574]/60 hover:bg-[#FAF7F2]/50",
           disabled && "cursor-not-allowed opacity-50"
         )}
       >
         <input {...getInputProps()} />
-        <CloudUpload className="mx-auto mb-3 h-10 w-10 text-violet-500" />
+        <CloudUpload className="mx-auto mb-3 h-10 w-10 text-[#C4A574]" />
         <p className="font-medium text-slate-800">
-          {isDragActive ? "Drop photos here" : "Drag & drop photos"}
+          {isDragActive ? sr.guest.dropActive : sr.guest.dropMedia}
         </p>
-        <p className="mt-1 text-sm text-slate-500">JPG, PNG, WEBP up to 15MB</p>
+        <p className="mt-1 text-sm text-slate-500">{sr.guest.formats}</p>
       </div>
 
       <AnimatePresence>
@@ -151,7 +226,12 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
               </button>
             </div>
             <Progress value={item.progress} />
-            <p className="mt-1 text-xs text-slate-500 capitalize">{item.status}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {item.status === "pending" && sr.guest.statusPending}
+              {item.status === "uploading" && sr.guest.statusUploading}
+              {item.status === "done" && sr.guest.statusDone}
+              {item.status === "error" && sr.guest.statusError}
+            </p>
           </motion.div>
         ))}
       </AnimatePresence>

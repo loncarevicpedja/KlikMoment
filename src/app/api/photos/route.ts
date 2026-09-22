@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const isManager = canManageEvent(session, event);
 
   if (!isManager && !event.allowGuestsToViewPhotos) {
-    return NextResponse.json({ error: "Gallery hidden" }, { status: 403 });
+    return NextResponse.json({ error: "Galerija je sakrivena" }, { status: 403 });
   }
 
   const likedOnly = isManager && req.nextUrl.searchParams.get("liked") === "1";

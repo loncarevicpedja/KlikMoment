@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, HardDrive, Image, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { sr } from "@/content/sr";
 import { formatBytes } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -34,16 +35,20 @@ export default function AdminDashboard() {
   }, []);
 
   const cards = [
-    { label: "Events", value: stats?.events, icon: Calendar },
-    { label: "Users", value: stats?.users, icon: Users },
-    { label: "Photos", value: stats?.photos, icon: Image },
-    { label: "Storage", value: stats ? formatBytes(stats.storage) : "—", icon: HardDrive },
+    { label: sr.admin.eventsCount, value: stats?.events, icon: Calendar },
+    { label: sr.admin.usersCount, value: stats?.users, icon: Users },
+    { label: sr.admin.photosCount, value: stats?.photos, icon: Image },
+    {
+      label: sr.admin.storageCount,
+      value: stats ? formatBytes(stats.storage) : "—",
+      icon: HardDrive,
+    },
   ];
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-slate-900">Admin Dashboard</h1>
-      <p className="mt-1 text-slate-600">Manage events, users, and platform usage.</p>
+      <h1 className="text-3xl font-bold text-slate-900">{sr.admin.dashboardTitle}</h1>
+      <p className="mt-1 text-slate-600">{sr.admin.dashboardSubtitle}</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card, i) => (

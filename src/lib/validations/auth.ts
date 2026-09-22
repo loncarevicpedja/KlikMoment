@@ -11,6 +11,6 @@ export const activateSchema = z.object({
   password: passwordSchema,
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, {
-  message: "Passwords do not match",
+  message: "Lozinke se ne poklapaju",
   path: ["confirmPassword"],
 });

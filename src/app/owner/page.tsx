@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RichTextDisplay } from "@/components/editor/rich-text-editor";
+import { sr } from "@/content/sr";
 import { formatDate } from "@/lib/utils";
 
 type EventRow = {
@@ -32,8 +33,8 @@ export default function OwnerDashboard() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-slate-900">My Events</h1>
-      <p className="mt-1 text-slate-600">Manage your event galleries</p>
+      <h1 className="text-3xl font-bold text-slate-900">{sr.owner.myEvents}</h1>
+      <p className="mt-1 text-slate-600">{sr.owner.myEventsSubtitle}</p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2">
         {loading &&
@@ -53,7 +54,8 @@ export default function OwnerDashboard() {
                 <CardContent className="p-6">
                   <RichTextDisplay html={event.eventName} />
                   <p className="mt-2 text-sm text-slate-500">
-                    {event._count.photos} photos · ends {formatDate(event.endDate)}
+                    {event._count.photos} {sr.owner.photosCount} · {sr.owner.ends}{" "}
+                    {formatDate(event.endDate)}
                   </p>
                   <span
                     className={`mt-3 inline-block rounded-full px-2 py-0.5 text-xs ${
@@ -62,7 +64,7 @@ export default function OwnerDashboard() {
                         : "bg-emerald-100 text-emerald-700"
                     }`}
                   >
-                    {event.isExpired ? "Expired" : "Active"}
+                    {event.isExpired ? sr.owner.expired : sr.owner.active}
                   </span>
                 </CardContent>
               </Card>
@@ -71,9 +73,7 @@ export default function OwnerDashboard() {
         ))}
 
         {!loading && !events.length && (
-          <p className="col-span-full text-center text-slate-500">
-            No events assigned yet. Contact your administrator.
-          </p>
+          <p className="col-span-full text-center text-slate-500">{sr.owner.noEvents}</p>
         )}
       </div>
     </div>

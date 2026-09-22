@@ -16,11 +16,11 @@ export async function POST(req: NextRequest) {
 
     const user = await userRepository.findByActivationToken(parsed.data.token);
     if (!user) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+      return NextResponse.json({ error: "Nevažeći link" }, { status: 400 });
     }
 
     if (user.activationExpiry && user.activationExpiry < new Date()) {
-      return NextResponse.json({ error: "Token expired" }, { status: 400 });
+      return NextResponse.json({ error: "Link je istekao" }, { status: 400 });
     }
 
     const passwordHash = await hashPassword(parsed.data.password);
@@ -34,6 +34,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch {
-    return NextResponse.json({ error: "Activation failed" }, { status: 500 });
+    return NextResponse.json({ error: "Aktivacija nije uspela" }, { status: 500 });
   }
 }

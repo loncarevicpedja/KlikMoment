@@ -8,8 +8,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { downloadPhotoFile, photoFilename } from "@/lib/download-photo";
-import { formatDate } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { formatDate, cn } from "@/lib/utils";
+import { isVideoMime } from "@/lib/validations/photo";
+import { sr } from "@/content/sr";
 
 export type PhotoItem = {
   id: string;
@@ -60,14 +61,16 @@ export function PhotoCard({
       eventId,
       filename: photoFilename(photo.id, photo.mimeType, photo.authorName),
     });
-    if (ok) toast.success("Photo saved");
-    else toast.error("Download failed");
+    if (ok) toast.success(sr.toast.photoSaved);
+    else toast.error(sr.toast.downloadFailed);
   };
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     onLike?.(photo.id, !photo.likedByOwner);
   };
+
+  const isVideo = photo.mimeType ? isVideoMime(photo.mimeType) : false;
 
   return (
     <motion.article
@@ -100,29 +103,40 @@ export function PhotoCard({
         type="button"
         onClick={onOpen}
         className="relative block w-full cursor-zoom-in bg-slate-100 text-left"
-        aria-label="View full size"
+        aria-label={sr.gallery.viewFullSize}
       >
-        {!loaded && (
+        {!loaded && !isVideo && (
           <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-100 to-slate-200" />
         )}
-        <Image
-          src={photo.publicUrl}
-          alt={photo.authorName ?? "Event photo"}
-          width={photo.width ?? 600}
-          height={photo.height ?? 800}
-          className={cn(
-            "h-auto w-full object-cover transition duration-500",
-            loaded ? "opacity-100" : "opacity-0"
-          )}
-          onLoad={() => setLoaded(true)}
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
+        {isVideo ? (
+          <video
+            src={photo.publicUrl}
+            className="h-auto w-full bg-black object-cover"
+            muted
+            playsInline
+            preload="metadata"
+            onLoadedData={() => setLoaded(true)}
+          />
+        ) : (
+          <Image
+            src={photo.publicUrl}
+            alt={photo.authorName ?? "Fotografija"}
+            width={photo.width ?? 600}
+            height={photo.height ?? 800}
+            className={cn(
+              "h-auto w-full object-cover transition duration-500",
+              loaded ? "opacity-100" : "opacity-0"
+            )}
+            onLoad={() => setLoaded(true)}
+            sizes="(max-width: 768px) 100vw, 33vw"
+          />
+        )}
       </button>
 
       <div className="flex items-center justify-between gap-2 p-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-slate-800">
-            {photo.authorName || "Anonymous"}
+            {photo.authorName || "Anonimno"}
           </p>
           <p className="text-xs text-slate-500">{formatDate(photo.createdAt)}</p>
         </div>
@@ -132,7 +146,7 @@ export function PhotoCard({
               variant="ghost"
               size="icon"
               onClick={handleLike}
-              aria-label={photo.likedByOwner ? "Unlike photo" : "Like photo"}
+              aria-label={photo.likedByOwner ? sr.gallery.unlikePhoto : sr.gallery.likePhoto}
               className={photo.likedByOwner ? "text-rose-500 hover:text-rose-600" : ""}
             >
               <Heart
@@ -148,7 +162,7 @@ export function PhotoCard({
               variant="ghost"
               size="icon"
               onClick={handleDownload}
-              aria-label="Download photo"
+              aria-label={sr.gallery.downloadPhoto}
             >
               <Download className="h-4 w-4" />
             </Button>

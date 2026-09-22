@@ -2,8 +2,10 @@ const MIME_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/webm": "webm",
 };
-
 export function photoFilename(
   id: string,
   mimeType?: string,

@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const eventFormSchema = z.object({
-  eventName: z.string().min(1, "Event name is required"),
+  eventName: z.string().min(1, "Naziv događaja je obavezan"),
   eventDescription: z.string().optional().default(""),
-  ownerEmail: z.string().email("Valid owner email required"),
+  ownerEmail: z.string().email("Unesite ispravan email vlasnika"),
   storageLimitGB: z.coerce.number().min(0.5).max(500),
   activeDays: z.coerce.number().int().min(1).max(365),
   uploadEnabled: z.boolean().default(true),

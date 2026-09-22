@@ -8,17 +8,44 @@ import {
   getPublicUrl,
   uploadToR2,
 } from "@/lib/r2";
+import { packageAllowsVideo } from "@/lib/packages";
 import {
-  ALLOWED_MIME_TYPES,
-  MAX_FILE_SIZE,
+  ALLOWED_IMAGE_MIME_TYPES,
+  ALLOWED_VIDEO_MIME_TYPES,
+  MAX_IMAGE_SIZE,
+  MAX_VIDEO_SIZE,
+  isVideoMime,
 } from "@/lib/validations/photo";
 
-const EXT_MAP: Record<string, string> = {
+const IMAGE_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/jpg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
 };
+
+const VIDEO_EXT: Record<string, string> = {
+  "video/mp4": "mp4",
+  "video/quicktime": "mov",
+  "video/webm": "webm",
+};
+
+async function assertUploadAllowed(eventId: string, bufferLength: number) {
+  const event = await eventRepository.findById(eventId);
+  if (!event) throw new Error("Događaj nije pronađen");
+  if (event.status !== "ACTIVE") throw new Error("Slanje medija nije dostupno");
+  if (event.isExpired || !event.uploadEnabled) {
+    throw new Error("Slanje medija je isključeno za ovaj događaj");
+  }
+
+  const usedBytes = await eventRepository.getStorageUsedBytes(eventId);
+  const limitBytes = event.storageLimitGB * 1024 * 1024 * 1024;
+  if (usedBytes + bufferLength > limitBytes) {
+    throw new Error("Dostignut limit prostora");
+  }
+
+  return event;
+}
 
 export async function uploadPhoto(params: {
   eventId: string;
@@ -28,34 +55,31 @@ export async function uploadPhoto(params: {
 }) {
   const { eventId, buffer, mimeType, authorName } = params;
 
-  if (!ALLOWED_MIME_TYPES.includes(mimeType as (typeof ALLOWED_MIME_TYPES)[number])) {
-    throw new Error("Invalid file type");
+  if (
+    !ALLOWED_IMAGE_MIME_TYPES.includes(
+      mimeType as (typeof ALLOWED_IMAGE_MIME_TYPES)[number]
+    )
+  ) {
+    throw new Error("Nepodržan format slike");
   }
 
-  if (buffer.length > MAX_FILE_SIZE) {
-    throw new Error("File too large");
+  if (buffer.length > MAX_IMAGE_SIZE) {
+    throw new Error("Fajl je prevelik");
   }
+
+  await assertUploadAllowed(eventId, buffer.length);
 
   const event = await eventRepository.findById(eventId);
-  if (!event) throw new Error("Event not found");
-  if (event.isExpired || !event.uploadEnabled) {
-    throw new Error("Uploads are disabled for this event");
-  }
-
-  const usedBytes = await eventRepository.getStorageUsedBytes(eventId);
-  const limitBytes = event.storageLimitGB * 1024 * 1024 * 1024;
-  if (usedBytes + buffer.length > limitBytes) {
-    throw new Error("Storage limit reached");
-  }
+  if (!event) throw new Error("Događaj nije pronađen");
 
   const metadata = await sharp(buffer).metadata();
-  const extension = EXT_MAP[mimeType] ?? "jpg";
+  const extension = IMAGE_EXT[mimeType] ?? "jpg";
   const photoId = randomUUID();
   const storageKey = buildPhotoKey(event.folderName, photoId, extension);
 
   await uploadToR2(storageKey, buffer, mimeType);
 
-  const photo = await photoRepository.create({
+  return photoRepository.create({
     id: photoId,
     event: { connect: { id: eventId } },
     storageKey,
@@ -66,14 +90,56 @@ export async function uploadPhoto(params: {
     width: metadata.width,
     height: metadata.height,
   });
+}
 
-  return photo;
+export async function registerUploadedMedia(params: {
+  eventId: string;
+  mediaId: string;
+  storageKey: string;
+  mimeType: string;
+  sizeBytes: number;
+  authorName?: string;
+}) {
+  const { eventId, mediaId, storageKey, mimeType, sizeBytes, authorName } =
+    params;
+
+  if (isVideoMime(mimeType)) {
+    if (
+      !ALLOWED_VIDEO_MIME_TYPES.includes(
+        mimeType as (typeof ALLOWED_VIDEO_MIME_TYPES)[number]
+      )
+    ) {
+      throw new Error("Nepodržan video format");
+    }
+    if (sizeBytes > MAX_VIDEO_SIZE) throw new Error("Video je prevelik");
+  } else {
+    throw new Error("Nepodržan format");
+  }
+
+  const event = await assertUploadAllowed(eventId, sizeBytes);
+  if (!packageAllowsVideo(event.packageId)) {
+    throw new Error("Video nije uključen u vaš paket");
+  }
+
+  const extension = VIDEO_EXT[mimeType] ?? "mp4";
+
+  return photoRepository.create({
+    id: mediaId,
+    event: { connect: { id: eventId } },
+    storageKey,
+    publicUrl: getPublicUrl(storageKey),
+    authorName: authorName?.trim() || null,
+    mimeType,
+    sizeBytes,
+    width: null,
+    height: null,
+  });
 }
 
 export async function deletePhoto(photoId: string, eventId: string) {
   const photo = await photoRepository.findById(photoId);
   if (!photo || photo.eventId !== eventId) {
-    throw new Error("Photo not found");
+    throw new Error("Foto nije pronađeno");
   }
 
   await deleteFromR2(photo.storageKey);
@@ -87,4 +153,15 @@ export async function deletePhotos(photoIds: string[], eventId: string) {
     photos.map((p) => p.id),
     eventId
   );
+}
+
+export function buildMediaKey(
+  folderName: string,
+  mediaId: string,
+  mimeType: string
+) {
+  const ext = isVideoMime(mimeType)
+    ? (VIDEO_EXT[mimeType] ?? "mp4")
+    : (IMAGE_EXT[mimeType] ?? "jpg");
+  return buildPhotoKey(folderName, mediaId, ext);
 }

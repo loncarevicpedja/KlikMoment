@@ -23,6 +23,7 @@ import {
   Underline as UnderlineIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sr } from "@/content/sr";
 
 type RichTextEditorProps = {
   value: string;
@@ -93,7 +94,7 @@ export function RichTextEditor({
   if (!editor) return null;
 
   const setLink = () => {
-    const url = window.prompt("URL");
+    const url = window.prompt(sr.editor.linkUrl);
     if (url) {
       editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
     }
@@ -135,7 +136,7 @@ export function RichTextEditor({
               }
               defaultValue=""
             >
-              <option value="">Font</option>
+              <option value="">{sr.editor.font}</option>
               <option value="Georgia, serif">Georgia</option>
               <option value="Inter, sans-serif">Inter</option>
               <option value="'Times New Roman', serif">Times</option>
@@ -152,7 +153,7 @@ export function RichTextEditor({
                     .run();
               }}
             >
-              <option value="">Size</option>
+              <option value="">{sr.editor.size}</option>
               <option value="14px">14</option>
               <option value="18px">18</option>
               <option value="24px">24</option>

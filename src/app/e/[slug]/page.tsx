@@ -2,7 +2,8 @@
 
 import { useEffect, useState, use, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Camera } from "lucide-react";
+import { sr } from "@/content/sr";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { GuestUpload } from "@/components/upload/guest-upload";
 import { PhotoGallery } from "@/components/gallery/photo-gallery";
 import { RichTextDisplay } from "@/components/editor/rich-text-editor";
@@ -19,6 +20,8 @@ type PublicEvent = {
   allowGuestsToDownloadPhotos: boolean;
   isExpired: boolean;
   photoCount: number;
+  pending?: boolean;
+  message?: string;
 };
 
 export default function PublicEventPage({
@@ -42,17 +45,28 @@ export default function PublicEventPage({
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-violet-50/50 to-white p-4">
+      <div className="min-h-screen bg-[#FAF7F2] p-4">
         <Skeleton className="mx-auto mt-12 h-64 max-w-3xl rounded-3xl" />
       </div>
     );
   }
 
+  if (event.pending) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#F4FAF6] px-4 text-center">
+        <BrandLogo size="md" className="mb-6" />
+        <h1 className="text-2xl font-bold text-[#0F1F17]">{sr.guest.pendingTitle}</h1>
+        <p className="mt-3 max-w-md text-[#5C6B63]">{sr.guest.pendingBody}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-violet-50/40 via-white to-white">
-      <header className="mx-auto flex max-w-3xl items-center gap-2 px-4 py-6">
-        <Camera className="h-6 w-6 text-violet-600" />
-        <span className="font-semibold text-violet-700">KlikMoment</span>
+    <div className="min-h-screen overflow-x-hidden bg-[#F4FAF6]">
+      <header className="sticky top-0 z-50 border-b border-[#D1E7D9] bg-white/85 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-3xl items-center px-4">
+          <BrandLogo size="sm" />
+        </div>
       </header>
 
       {event.coverImageUrl && (
@@ -61,8 +75,8 @@ export default function PublicEventPage({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={event.coverImageUrl}
-              alt="Event cover"
-              className="mx-auto block h-auto w-full max-h-[min(85vh,900px)] object-contain"
+              alt="Naslovna"
+              className="mx-auto block h-auto max-h-[min(85vh,900px)] w-full object-contain"
             />
           </div>
         </div>
@@ -75,24 +89,24 @@ export default function PublicEventPage({
       >
         <RichTextDisplay
           html={event.eventName}
-          className="text-center text-3xl font-bold sm:text-4xl"
+          className="text-center font-serif text-3xl font-bold sm:text-4xl"
         />
 
         {event.eventDescription && (
           <RichTextDisplay
             html={event.eventDescription}
-            className="mt-4 text-center text-slate-600"
+            className="mt-4 text-center text-[#6B6560]"
           />
         )}
 
         {event.isExpired && (
           <p className="mt-4 rounded-2xl bg-amber-50 p-4 text-center text-sm text-amber-800">
-            This event has ended. Uploads are disabled.
+            {sr.guest.eventEnded}
           </p>
         )}
 
-        <section className="mt-10 rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xl shadow-slate-200/40 sm:p-8">
-          <h2 className="mb-6 text-xl font-semibold text-slate-900">Share your photos</h2>
+        <section className="mt-10 rounded-3xl border border-[#E8D5CE]/80 bg-white p-6 shadow-xl sm:p-8">
+          <h2 className="mb-6 text-xl font-semibold">{sr.guest.sharePhotos}</h2>
           <GuestUpload
             slug={slug}
             disabled={!event.uploadEnabled}
@@ -105,8 +119,8 @@ export default function PublicEventPage({
 
         {event.allowGuestsToViewPhotos && (
           <section className="mt-12">
-            <h2 className="mb-6 text-xl font-semibold text-slate-900">
-              Gallery ({event.photoCount})
+            <h2 className="mb-6 text-xl font-semibold">
+              {sr.guest.gallery} ({event.photoCount})
             </h2>
             <PhotoGallery
               key={galleryKey}

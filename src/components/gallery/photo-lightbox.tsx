@@ -6,6 +6,8 @@ import { ChevronLeft, ChevronRight, Download, Heart, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { downloadPhotoFile, photoFilename } from "@/lib/download-photo";
+import { isVideoMime } from "@/lib/validations/photo";
+import { sr } from "@/content/sr";
 import { cn } from "@/lib/utils";
 import type { PhotoItem } from "./photo-card";
 
@@ -64,9 +66,10 @@ export function PhotoLightbox({
       eventId,
       filename: photoFilename(photo.id, photo.mimeType, photo.authorName),
     });
-    if (!ok) toast.error("Download failed");
+    if (!ok) toast.error(sr.toast.downloadFailed);
   };
 
+  const isVideo = photo.mimeType ? isVideoMime(photo.mimeType) : false;
   const authorLabel = photo.authorName?.trim() || null;
 
   return (
@@ -74,7 +77,7 @@ export function PhotoLightbox({
       className="fixed inset-0 z-50 flex flex-col bg-black/95"
       role="dialog"
       aria-modal="true"
-      aria-label="Photo preview"
+      aria-label={sr.gallery.photoPreview}
     >
       {/* Top bar */}
       <div
@@ -83,7 +86,7 @@ export function PhotoLightbox({
       >
         <p className="min-w-0 truncate text-sm font-medium text-white sm:text-base">
           {authorLabel ?? (
-            <span className="text-white/50">Anonymous</span>
+            <span className="text-white/50">Anonimno</span>
           )}
         </p>
         <div className="flex shrink-0 items-center gap-1">
@@ -93,7 +96,7 @@ export function PhotoLightbox({
               size="icon"
               className="text-white hover:bg-white/10"
               onClick={() => void handleDownload()}
-              aria-label="Download photo"
+              aria-label={sr.gallery.downloadPhoto}
             >
               <Download className="h-5 w-5" />
             </Button>
@@ -104,7 +107,7 @@ export function PhotoLightbox({
               size="icon"
               className="text-white hover:bg-white/10"
               onClick={() => onLike(photo.id, !photo.likedByOwner)}
-              aria-label={photo.likedByOwner ? "Unlike photo" : "Like photo"}
+              aria-label={photo.likedByOwner ? sr.gallery.unlikePhoto : sr.gallery.likePhoto}
             >
               <Heart
                 className={cn(
@@ -119,7 +122,7 @@ export function PhotoLightbox({
             size="icon"
             className="text-white hover:bg-white/10"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={sr.gallery.close}
           >
             <X className="h-5 w-5" />
           </Button>
@@ -132,14 +135,23 @@ export function PhotoLightbox({
           className="relative h-full w-full"
           onClick={(e) => e.stopPropagation()}
         >
-          <Image
-            src={photo.publicUrl}
-            alt={photo.authorName ?? "Event photo"}
-            fill
-            className="object-contain"
-            sizes="100vw"
-            priority
-          />
+          {isVideo ? (
+            <video
+              src={photo.publicUrl}
+              controls
+              playsInline
+              className="absolute inset-0 h-full w-full object-contain"
+            />
+          ) : (
+            <Image
+              src={photo.publicUrl}
+              alt={photo.authorName ?? "Fotografija"}
+              fill
+              className="object-contain"
+              sizes="100vw"
+              priority
+            />
+          )}
 
           <Button
             variant="ghost"
@@ -150,7 +162,7 @@ export function PhotoLightbox({
             )}
             onClick={goPrev}
             disabled={!hasPrev}
-            aria-label="Previous photo"
+            aria-label={sr.gallery.previousPhoto}
           >
             <ChevronLeft className="h-7 w-7 sm:h-8 sm:w-8" />
           </Button>
@@ -164,7 +176,7 @@ export function PhotoLightbox({
             )}
             onClick={goNext}
             disabled={!hasNext}
-            aria-label="Next photo"
+            aria-label={sr.gallery.nextPhoto}
           >
             <ChevronRight className="h-7 w-7 sm:h-8 sm:w-8" />
           </Button>

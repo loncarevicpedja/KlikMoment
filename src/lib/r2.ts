@@ -97,6 +97,23 @@ export async function deleteFolderFromR2(folderName: string): Promise<void> {
   } while (continuationToken);
 }
 
+export async function getPresignedUploadUrl(
+  key: string,
+  contentType: string,
+  expiresIn = 3600
+): Promise<string> {
+  const client = getR2Client();
+  return getSignedUrl(
+    client,
+    new PutObjectCommand({
+      Bucket: getBucket(),
+      Key: key,
+      ContentType: contentType,
+    }),
+    { expiresIn }
+  );
+}
+
 export async function getSignedDownloadUrl(
   key: string,
   expiresIn = 3600
