@@ -22,11 +22,12 @@ export const packages: PackageDefinition[] = [
     highlighted: false,
     activeDays: 30,
     storageLimitGB: 5,
-    allowVideo: false,
+    allowVideo: true,
     allowGuestDownload: false,
     features: [
       "1 događaj",
       "Neograničeno fotografija",
+      "Video snimci (do 100 MB)",
       "30 dana skladištenja",
       "Galerija otvorena gostima",
       "Prilagodljiva stranica događaja",

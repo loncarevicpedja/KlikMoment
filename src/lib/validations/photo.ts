@@ -29,6 +29,24 @@ export function maxSizeForMime(mime: string) {
   return isVideoMime(mime) ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
 }
 
+const EXT_TO_MIME: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp",
+  mp4: "video/mp4",
+  mov: "video/quicktime",
+  webm: "video/webm",
+};
+
+/** Some mobile browsers leave file.type empty for camera/gallery picks. */
+export function resolveFileMime(file: File): string {
+  if (file.type) return file.type;
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (ext && EXT_TO_MIME[ext]) return EXT_TO_MIME[ext];
+  return file.type;
+}
+
 export const guestUploadSchema = z.object({
   authorName: z.string().max(100).optional(),
   eventSlug: z.string().min(1),

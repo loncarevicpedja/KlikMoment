@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eventRepository } from "@/lib/repositories/event-repository";
 import { photoRepository } from "@/lib/repositories/photo-repository";
+import { packageAllowsVideo } from "@/lib/packages";
 import { coverStorageKey, mediaUrl } from "@/lib/media-url";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -38,5 +39,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
     allowGuestsToDownloadPhotos: event.allowGuestsToDownloadPhotos,
     isExpired: event.isExpired,
     photoCount,
+    allowVideo: packageAllowsVideo(event.packageId),
   });
 }

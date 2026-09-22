@@ -22,6 +22,7 @@ type PublicEvent = {
   photoCount: number;
   pending?: boolean;
   message?: string;
+  allowVideo?: boolean;
 };
 
 export default function PublicEventPage({
@@ -109,6 +110,7 @@ export default function PublicEventPage({
           <h2 className="mb-6 text-xl font-semibold">{sr.guest.sharePhotos}</h2>
           <GuestUpload
             slug={slug}
+            allowVideo={event.allowVideo ?? true}
             disabled={!event.uploadEnabled}
             onUploaded={() => {
               setGalleryKey((k) => k + 1);

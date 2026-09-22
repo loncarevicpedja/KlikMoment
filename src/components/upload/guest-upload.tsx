@@ -10,22 +10,45 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { isVideoMime } from "@/lib/validations/photo";
+import {
+  isVideoMime,
+  maxSizeForMime,
+  resolveFileMime,
+} from "@/lib/validations/photo";
 
 type UploadItem = {
   id: string;
   file: File;
+  mimeType: string;
   progress: number;
   status: "pending" | "uploading" | "done" | "error";
 };
 
 type GuestUploadProps = {
   slug: string;
+  allowVideo?: boolean;
   disabled?: boolean;
   onUploaded?: () => void;
 };
 
-export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
+const IMAGE_ACCEPT = {
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+  "image/webp": [".webp"],
+} as const;
+
+const VIDEO_ACCEPT = {
+  "video/mp4": [".mp4"],
+  "video/quicktime": [".mov"],
+  "video/webm": [".webm"],
+} as const;
+
+export function GuestUpload({
+  slug,
+  allowVideo = true,
+  disabled,
+  onUploaded,
+}: GuestUploadProps) {
   const [authorName, setAuthorName] = useState("");
   const [queue, setQueue] = useState<UploadItem[]>([]);
 
@@ -41,7 +64,7 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         slug,
-        mimeType: item.file.type,
+        mimeType: item.mimeType,
         sizeBytes: item.file.size,
         authorName: authorName || undefined,
       }),
@@ -69,7 +92,7 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
       };
       xhr.onerror = () => reject(new Error(sr.common.error));
       xhr.open("PUT", uploadUrl);
-      xhr.setRequestHeader("Content-Type", item.file.type);
+      xhr.setRequestHeader("Content-Type", item.mimeType);
       xhr.send(item.file);
     });
 
@@ -80,7 +103,7 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
         slug,
         mediaId,
         storageKey,
-        mimeType: item.file.type,
+        mimeType: item.mimeType,
         sizeBytes: item.file.size,
         authorName: authorName || undefined,
       }),
@@ -125,7 +148,10 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
 
   const uploadFile = async (item: UploadItem) => {
     try {
-      if (isVideoMime(item.file.type)) {
+      if (isVideoMime(item.mimeType)) {
+        if (!allowVideo) {
+          throw new Error("Video nije uključen u paket");
+        }
         await uploadVideo(item);
       } else {
         await uploadImage(item);
@@ -148,30 +174,51 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
   const onDrop = useCallback(
     (accepted: File[]) => {
       if (disabled) return;
-      const items: UploadItem[] = accepted.map((file) => ({
-        id: `${file.name}-${Date.now()}-${Math.random()}`,
-        file,
-        progress: 0,
-        status: "pending",
-      }));
+      const items: UploadItem[] = accepted.map((file) => {
+        const mimeType = resolveFileMime(file);
+        return {
+          id: `${file.name}-${Date.now()}-${Math.random()}`,
+          file,
+          mimeType,
+          progress: 0,
+          status: "pending",
+        };
+      });
       setQueue((q) => [...q, ...items]);
       items.forEach((item) => void uploadFile(item));
     },
-    [disabled, authorName, slug]
+    [disabled, authorName, slug, allowVideo]
   );
+
+  const accept = allowVideo
+    ? { ...IMAGE_ACCEPT, ...VIDEO_ACCEPT }
+    : { ...IMAGE_ACCEPT };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      "image/jpeg": [".jpg", ".jpeg"],
-      "image/png": [".png"],
-      "image/webp": [".webp"],
-      "video/mp4": [".mp4"],
-      "video/quicktime": [".mov"],
-      "video/webm": [".webm"],
-    },
+    accept,
     disabled,
     multiple: true,
+    validator: (file) => {
+      const mimeType = resolveFileMime(file);
+      if (isVideoMime(mimeType) && !allowVideo) {
+        return { code: "video-not-allowed", message: "Video nije u paketu" };
+      }
+      if (file.size > maxSizeForMime(mimeType)) {
+        return { code: "file-too-large", message: "Fajl je prevelik" };
+      }
+      return null;
+    },
+    onDropRejected: (rejections) => {
+      const code = rejections[0]?.errors[0]?.code;
+      if (code === "file-too-large") {
+        toast.error(allowVideo ? sr.guest.formats : "JPG, PNG, WEBP do 15 MB");
+      } else if (code === "video-not-allowed") {
+        toast.error("Video nije uključen u vaš paket");
+      } else {
+        toast.error(sr.toast.uploadFailed);
+      }
+    },
   });
 
   const removeItem = (id: string) => {
@@ -207,7 +254,9 @@ export function GuestUpload({ slug, disabled, onUploaded }: GuestUploadProps) {
         <p className="font-medium text-slate-800">
           {isDragActive ? sr.guest.dropActive : sr.guest.dropMedia}
         </p>
-        <p className="mt-1 text-sm text-slate-500">{sr.guest.formats}</p>
+        <p className="mt-1 text-sm text-slate-500">
+          {allowVideo ? sr.guest.formats : "JPG, PNG, WEBP do 15 MB"}
+        </p>
       </div>
 
       <AnimatePresence>

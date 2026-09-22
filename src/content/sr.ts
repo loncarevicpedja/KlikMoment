@@ -125,6 +125,8 @@ export const sr = {
     signIn: "Prijava",
     email: "E-pošta",
     password: "Lozinka",
+    showPassword: "Prikaži lozinku",
+    hidePassword: "Sakrij lozinku",
     signingIn: "Prijavljivanje...",
     invalidCredentials: "Pogrešna e-pošta ili lozinka",
     activateTitle: "Aktivacija naloga",
